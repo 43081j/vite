@@ -4,7 +4,7 @@ import semver from 'semver'
 import colors from 'picocolors'
 import type { Options as ExecaOptions, ExecaReturnValue } from 'execa'
 import { execa } from 'execa'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 
 export async function run(
   bin: string,
@@ -55,7 +55,9 @@ export async function logRecentCommits(pkgName: string): Promise<void> {
 }
 
 export async function updateTemplateVersions(): Promise<void> {
-  const viteVersion = fs.readJSONSync('packages/vite/package.json').version
+  const viteVersion = JSON.parse(
+    fs.readFileSync('packages/vite/package.json', { encoding: 'utf8' }),
+  ).version
   if (/beta|alpha|rc/.test(viteVersion)) return
 
   const dir = 'packages/create-vite'
@@ -64,7 +66,7 @@ export async function updateTemplateVersions(): Promise<void> {
   )
   for (const template of templates) {
     const pkgPath = path.join(dir, template, `package.json`)
-    const pkg = fs.readJSONSync(pkgPath)
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, { encoding: 'utf8' }))
     pkg.devDependencies.vite = `^` + viteVersion
     writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
   }

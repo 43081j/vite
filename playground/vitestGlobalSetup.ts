@@ -1,6 +1,7 @@
 import os from 'node:os'
 import path from 'node:path'
-import fs from 'fs-extra'
+import fs from 'node:fs/promises'
+import fsSync from 'node:fs'
 import type { BrowserServer } from 'playwright-chromium'
 import { chromium } from 'playwright-chromium'
 import { hasWindowsUnicodeFsBug } from './hasWindowsUnicodeFsBug'
@@ -21,14 +22,15 @@ export async function setup(): Promise<void> {
       : undefined,
   })
 
-  await fs.mkdirp(DIR)
+  await fs.mkdir(DIR, { recursive: true })
   await fs.writeFile(path.join(DIR, 'wsEndpoint'), browserServer.wsEndpoint())
 
   const tempDir = path.resolve(__dirname, '../playground-temp')
-  await fs.ensureDir(tempDir)
-  await fs.emptyDir(tempDir)
+  await fs.rm(tempDir, { recursive: true, force: true })
+  await fs.mkdir(tempDir, { recursive: true })
   await fs
-    .copy(path.resolve(__dirname, '../playground'), tempDir, {
+    .cp(path.resolve(__dirname, '../playground'), tempDir, {
+      recursive: true,
       dereference: false,
       filter(file) {
         if (file.includes('中文-にほんご-한글-🌕🌖🌗')) {
@@ -52,6 +54,8 @@ export async function setup(): Promise<void> {
 export async function teardown(): Promise<void> {
   await browserServer?.close()
   if (!process.env.VITE_PRESERVE_BUILD_ARTIFACTS) {
-    fs.removeSync(path.resolve(__dirname, '../playground-temp'))
+    fsSync.rmSync(path.resolve(__dirname, '../playground-temp'), {
+      recursive: true,
+    })
   }
 }

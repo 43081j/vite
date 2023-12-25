@@ -1,7 +1,7 @@
 import type * as http from 'node:http'
 import path, { dirname, join, resolve } from 'node:path'
 import os from 'node:os'
-import fs from 'fs-extra'
+import fs from 'node:fs'
 import { chromium } from 'playwright-chromium'
 import type {
   ConfigEnv,
